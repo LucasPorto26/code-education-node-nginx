@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+
+  nginx-node:
+    restart: always
+    build:
+      context: ./nignx
+      dockerfile: Dockerfile
+    container_name: nginx   
+    volumes:
+      - ./nignx:/etc/nginx/conf.d
+    ports: 
+      - '8080:80'
+      - '443:443'
+    depends_on:
+      - app   
+    networks:
+      - node-network
+
+  app:
+    build: .
+    container_name: app  
+    networks:
+      - node-network
+    volumes:
+      - ./:/usr/src/app
+    tty: true
+    restart: always
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db      
+
+  db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: db
+    #restart: always
+    tty: true
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_USER=root
+    networks:
+      - node-network
+      
+networks:
+  node-network:
+    driver: bridge

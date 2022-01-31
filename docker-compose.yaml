@@ -2,7 +2,40 @@ version: '3'
 
 services:
 
-  nginx-node:
+  db:  
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    command: [--ignore-db-dir=lost+found, --innodb-use-native-aio=0]
+    container_name: db
+    restart: always
+    tty: true
+    volumes:
+      - ./mysql/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=admin
+      #- MYSQL_USER=admin
+    ports:
+      - "3306:3306"   
+    networks:
+      - node-network
+     
+  app:
+    build: .
+    container_name: app
+    networks:
+      - node-network
+    volumes:
+      - ./:/usr/src/app
+    tty: true
+    restart: always
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db 
+    
+  nginx:
     restart: always
     build:
       context: ./nignx
@@ -13,40 +46,12 @@ services:
     ports: 
       - '8080:80'
       - '443:443'
+    networks:
+      - node-network
     depends_on:
-      - app   
-    networks:
-      - node-network
-
-  app:
-    build: .
-    container_name: app  
-    networks:
-      - node-network
-    volumes:
-      - ./:/usr/src/app
-    tty: true
-    restart: always
-    ports:
-      - '3000:3000'
-    depends_on:
-      - db      
-
-  db:
-    image: mysql:5.7
-    command: --innodb-use-native-aio=0
-    container_name: db
-    #restart: always
-    tty: true
-    volumes:
-      - ./mysql:/var/lib/mysql
-    environment:
-      - MYSQL_DATABASE=nodedb
-      - MYSQL_ROOT_PASSWORD=admin
-      - MYSQL_USER=root
-    networks:
-      - node-network
-      
+      - app
+      - db
+    
 networks:
   node-network:
     driver: bridge

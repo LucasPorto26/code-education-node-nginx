@@ -1,6 +1,10 @@
 FROM node:latest
 
-WORKDIR /usr/src/app
+WORKDIR /node
+
+COPY . .
+
+RUN npm i
 
 EXPOSE 3000
 

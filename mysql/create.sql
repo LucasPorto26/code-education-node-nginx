@@ -1,0 +1,4 @@
+
+CREATE TABLE NODE_DB_USER (
+  name VARCHAR(50)
+);
